@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta FotMarkets — Controle de Lote</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d2340">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FotMarkets">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<style>
+  :root{
+    --navy-deep:#0d2340;
+    --navy:#12305a;
+    --navy-line:#1c4275;
+    --gold:#e8b84b;
+    --gray:#9aa2ad;
+    --orange:#d9762e;
+    --purple:#6b3fa0;
+    --paper:#eef1f5;
+    --ink:#1b2431;
+    --ink-soft:#5b6472;
+    --green:#2f9e63;
+    --red:#c1443a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Segoe UI', 'Inter', Arial, sans-serif;
+    padding:32px 20px 60px;
+  }
+  .sheet{ max-width:1180px; margin:0 auto; }
+
+  .masthead{
+    background:linear-gradient(135deg,var(--navy-deep),var(--navy));
+    border-radius:10px 10px 0 0;
+    padding:26px 32px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .masthead h1{ color:#fff; font-size:28px; letter-spacing:.5px; margin:0 0 4px; font-weight:700; }
+  .masthead .sub{ color:var(--gold); font-size:13px; font-weight:600; letter-spacing:1px; }
+  .masthead .period-edit{ text-align:right; color:#cfe0f5; font-size:13px; line-height:1.5; }
+  .masthead input.period-input{
+    background:transparent;
+    border:none;
+    border-bottom:1px solid rgba(255,255,255,.4);
+    color:#fff;
+    font-size:20px;
+    text-align:right;
+    width:110px;
+    font-family:inherit;
+    padding:2px 0;
+  }
+  .masthead input.period-input:focus{ outline:none; border-bottom-color:var(--gold); }
+
+  .rules{
+    background:var(--navy);
+    color:#dfe8f5;
+    padding:14px 32px;
+    font-size:13.5px;
+    line-height:1.8;
+    border-bottom:2px solid var(--gold);
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 4px;
+    align-items:center;
+  }
+  .rules b{color:var(--gold); font-weight:600;}
+  .rules input{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
+    color:#fff;
+    font-size:13px;
+    padding:2px 6px;
+    border-radius:4px;
+    width:64px;
+    font-family:inherit;
+    text-align:center;
+  }
+  .rules input:focus{ outline:none; border-color:var(--gold); }
+
+  .grid-wrap{
+    background:#fff;
+    padding:28px 32px 36px;
+    border-radius:0 0 10px 10px;
+    box-shadow:0 8px 24px rgba(13,35,64,.08);
+  }
+
+  table.week-table{ width:100%; border-collapse:collapse; margin-bottom:30px; }
+  table.week-table th{
+    background:var(--navy); color:#fff; font-size:12.5px; font-weight:600;
+    padding:10px 8px; text-align:center;
+  }
+  table.week-table th:first-child{ border-radius:6px 0 0 0; }
+  table.week-table th:last-child{ border-radius:0 6px 0 0; }
+  table.week-table td{
+    text-align:center; padding:6px 6px; font-size:14px;
+    border-bottom:1px solid #e7ebf0; color:var(--ink);
+  }
+  .wk-label{ color:#fff; font-weight:700; font-size:15px; width:56px; }
+  .wk1 .wk-label{background:var(--gold);}
+  .wk2 .wk-label{background:var(--gray);}
+  .wk3 .wk-label{background:var(--orange);}
+  .wk4 .wk-label{background:var(--purple);}
+
+  .cell-input{
+    width:100%;
+    max-width:110px;
+    text-align:center;
+    font-size:14px;
+    font-family:inherit;
+    padding:8px 4px;
+    border:1px solid #dfe4ea;
+    border-radius:5px;
+    color:var(--ink);
+    background:#fbfcfd;
+  }
+  .cell-input:focus{ outline:none; border-color:var(--navy); background:#fff; }
+  .cell-input.neg{ color:var(--red); font-weight:600; }
+  .cell-input.pos{ color:var(--green); font-weight:600; }
+
+  .pct-cell{ min-width:150px; }
+  .pct-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .pct-label{ font-weight:700; color:var(--navy); font-size:14px; }
+  .pct-label.pct-hit{ color:var(--green); }
+  .pct-track{
+    width:100%; max-width:140px; height:9px; border-radius:5px;
+    background:#e7ebf0; overflow:hidden;
+  }
+  .pct-fill{
+    height:100%; border-radius:5px;
+    background:linear-gradient(90deg, var(--orange), var(--gold));
+    transition:width .3s ease;
+  }
+  .pct-fill.full{ background:linear-gradient(90deg, var(--green), #4ecb8a); }
+
+  .lower{ display:flex; gap:36px; flex-wrap:wrap; align-items:flex-start; }
+
+  .totals{ flex:0 0 260px; }
+  .totals h2, .chart-box h2{
+    font-size:13px; letter-spacing:.5px; color:var(--navy); margin:0 0 10px;
+    padding-bottom:8px; border-bottom:2px solid var(--navy-line);
+  }
+  .totals table{ width:100%; border-collapse:collapse; }
+  .totals td{ padding:11px 14px; font-size:14px; border-bottom:1px solid #eef1f5; }
+  .totals tr td:first-child{ color:#fff; font-weight:700; width:70px; border-radius:4px 0 0 4px; }
+  .totals tr td:last-child{ text-align:right; font-weight:600; background:#f7f9fb; }
+  .t-wk1 td:first-child{background:var(--gold);}
+  .t-wk2 td:first-child{background:var(--gray);}
+  .t-wk3 td:first-child{background:var(--orange);}
+  .t-wk4 td:first-child{background:var(--purple);}
+  .t-mensal td:first-child{background:var(--navy-deep); border-radius:4px 0 0 4px;}
+  .t-mensal td{background:var(--navy-deep) !important; color:#fff; font-weight:700;}
+  .t-mensal td:last-child{background:var(--navy-deep) !important; color:var(--gold);}
+
+  .chart-box{ flex:1; min-width:320px; }
+  .bars{
+    display:flex; align-items:flex-end; gap:26px; height:180px;
+    padding:0 10px; border-bottom:2px solid var(--navy-line);
+  }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar-val{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; font-weight:600; }
+  .bar{ width:38px; border-radius:4px 4px 0 0; transition:height .3s ease; min-height:2px; }
+  .bar-wk1{background:var(--gold);}
+  .bar-wk2{background:var(--gray);}
+  .bar-wk3{background:var(--orange);}
+  .bar-wk4{background:var(--purple);}
+  .bar-names{ display:flex; gap:26px; padding:8px 10px 0; }
+  .bar-names span{ flex:1; text-align:center; font-size:12px; color:var(--ink-soft); font-weight:600; }
+
+  .note{
+    margin-top:26px; font-size:12.5px; color:var(--ink-soft);
+    border-left:3px solid var(--gold); padding:8px 14px; background:#fbf8ef;
+  }
+
+  .toolbar{
+    max-width:1180px; margin:0 auto 14px; display:flex; justify-content:flex-end; gap:10px;
+  }
+  .toolbar button{
+    font-family:inherit; font-size:13px; font-weight:600; padding:9px 16px;
+    border-radius:6px; border:1px solid var(--navy-line); background:#fff; color:var(--navy);
+    cursor:pointer;
+  }
+  .toolbar button:hover{ background:var(--navy); color:#fff; }
+  .toolbar button.reset{ border-color:#d9a5a0; color:var(--red); }
+  .toolbar button.reset:hover{ background:var(--red); color:#fff; }
+
+  @media (max-width:720px){
+    .masthead{flex-direction:column; align-items:flex-start;}
+    .masthead .period-edit{text-align:left;}
+    table.week-table{font-size:12px;}
+    table.week-table th, table.week-table td{padding:6px 3px;}
+    .cell-input{font-size:12px; padding:6px 2px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button id="btnInstall" type="button" style="display:none;">Instalar app</button>
+  <button id="btnReset" class="reset" type="button">Limpar tudo</button>
+</div>
+
+<div class="sheet">
+
+  <div class="masthead">
+    <div>
+      <h1>Meta FotMarkets</h1>
+      <div class="sub">CONTROLE DE LOTE</div>
+    </div>
+    <div class="period-edit">
+      Período
+      <div><input class="period-input" id="periodo" value="09 | 2026"></div>
+    </div>
+  </div>
+
+  <div class="rules">
+    Saldo a ser retirado por operação, respeitando o limite mínimo de
+    <input id="lim-min" value="2" inputmode="decimal"> e máximo de
+    <input id="lim-max" value="5" inputmode="decimal"> dólares.
+    &nbsp;Meta diária de UA: US$
+    <input id="meta-diaria" value="30,00" inputmode="decimal">
+  </div>
+
+  <div class="grid-wrap">
+
+    <table class="week-table">
+      <thead>
+        <tr>
+          <th>Sem.</th>
+          <th>Segunda</th>
+          <th>Terça-feira</th>
+          <th>Quarta-feira</th>
+          <th>Quinta-feira</th>
+          <th>Sexta-feira</th>
+          <th>Domingo</th>
+          <th>Percentual</th>
+        </tr>
+      </thead>
+      <tbody id="weekBody">
+        <!-- rows built by JS -->
+      </tbody>
+    </table>
+
+    <div class="lower">
+      <div class="totals">
+        <h2>TOTAL SEMANAL</h2>
+        <table id="totalsTable">
+          <tr class="t-wk1"><td>1º</td><td id="tot-1">R$ 0,00</td></tr>
+          <tr class="t-wk2"><td>2º</td><td id="tot-2">R$ 0,00</td></tr>
+          <tr class="t-wk3"><td>3º</td><td id="tot-3">R$ 0,00</td></tr>
+          <tr class="t-wk4"><td>4º</td><td id="tot-4">R$ 0,00</td></tr>
+          <tr class="t-mensal"><td>Mensal</td><td id="tot-mes">R$ 0,00</td></tr>
+        </table>
+      </div>
+
+      <div class="chart-box">
+        <h2>DESEMPENHO POR SEMANA</h2>
+        <div class="bars" id="bars">
+          <div class="bar-col"><div class="bar-val" id="bv-1">R$ 0,00</div><div class="bar bar-wk1" id="b-1" style="height:2%"></div></div>
+          <div class="bar-col"><div class="bar-val" id="bv-2">R$ 0,00</div><div class="bar bar-wk2" id="b-2" style="height:2%"></div></div>
+          <div class="bar-col"><div class="bar-val" id="bv-3">R$ 0,00</div><div class="bar bar-wk3" id="b-3" style="height:2%"></div></div>
+          <div class="bar-col"><div class="bar-val" id="bv-4">R$ 0,00</div><div class="bar bar-wk4" id="b-4" style="height:2%"></div></div>
+        </div>
+        <div class="bar-names">
+          <span>1ª sem.</span><span>2ª sem.</span><span>3ª sem.</span><span>4ª sem.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" id="note">
+      Edite os valores nas células (use vírgula para decimais, ex: -29,30). O percentual semanal mede o quanto a meta diária foi cumprida em cada dia da semana (0% a 100%): um dia sem retirada positiva conta 0%, e um dia igual ou acima da meta diária conta 100%, até o teto de 100% por dia. Totais e gráfico são recalculados automaticamente.
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const weekMeta = [
+    {n:'1º', cls:'wk1'},
+    {n:'2º', cls:'wk2'},
+    {n:'3º', cls:'wk3'},
+    {n:'4º', cls:'wk4'},
+  ];
+  const days = ['Segunda','Terça','Quarta','Quinta','Sexta','Domingo'];
+
+  // initial data matching the original spreadsheet (week 3 pre-filled)
+  const initialData = [
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['-29,30', '', '', '', '', '30,00'],
+    ['', '', '', '', '', ''],
+  ];
+
+  function buildRows(){
+    const tbody = document.getElementById('weekBody');
+    tbody.innerHTML = '';
+    weekMeta.forEach((wk, wi) => {
+      const tr = document.createElement('tr');
+      tr.className = wk.cls;
+      let html = `<td class="wk-label">${wk.n}</td>`;
+      for(let di=0; di<6; di++){
+        html += `<td><input class="cell-input" data-week="${wi}" data-day="${di}" value="${initialData[wi][di]}" placeholder="-" inputmode="decimal"></td>`;
+      }
+      html += `<td class="pct-cell">
+        <div class="pct-wrap">
+          <span class="pct-label" id="pct-${wi}">0,0%</span>
+          <div class="pct-track"><div class="pct-fill" id="pct-fill-${wi}" style="width:0%"></div></div>
+        </div>
+      </td>`;
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function parseNum(str){
+    if(!str) return 0;
+    const cleaned = str.replace(/[^\d,.\-]/g,'').replace(/\./g,'').replace(',', '.');
+    const v = parseFloat(cleaned);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function formatBRL(v){
+    const sign = v < 0 ? '-' : '';
+    const abs = Math.abs(v);
+    const formatted = abs.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    return `${sign}R$ ${formatted}`;
+  }
+
+  function getMetaDiaria(){
+    const v = parseNum(document.getElementById('meta-diaria').value);
+    return v > 0 ? v : 30;
+  }
+
+  function recalc(){
+    const metaDiaria = getMetaDiaria();
+
+    let monthTotal = 0;
+    const weekTotals = [];
+
+    for(let wi=0; wi<4; wi++){
+      let weekSum = 0;
+      let achievementSum = 0; // sum of each day's fraction of the daily goal, capped at 1 per day
+      for(let di=0; di<6; di++){
+        const input = document.querySelector(`.cell-input[data-week="${wi}"][data-day="${di}"]`);
+        const val = parseNum(input.value);
+        weekSum += val;
+        input.classList.remove('neg','pos');
+        if(val < 0) input.classList.add('neg');
+        else if(val > 0) input.classList.add('pos');
+
+        const dayFraction = val > 0 && metaDiaria > 0 ? Math.min(val / metaDiaria, 1) : 0;
+        achievementSum += dayFraction;
+      }
+      weekTotals.push(weekSum);
+      monthTotal += weekSum;
+
+      document.getElementById(`tot-${wi+1}`).textContent = formatBRL(weekSum);
+
+      // weekly percentage: average daily goal completion, clamped 0-100%
+      const weekPct = Math.max(0, Math.min(100, (achievementSum / 6) * 100));
+
+      const pctLabel = document.getElementById(`pct-${wi}`);
+      const pctFill = document.getElementById(`pct-fill-${wi}`);
+      pctLabel.textContent = weekPct.toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+      pctLabel.classList.toggle('pct-hit', weekPct >= 100);
+      pctFill.style.width = weekPct + '%';
+      pctFill.classList.toggle('full', weekPct >= 100);
+
+      const bar = document.getElementById(`b-${wi+1}`);
+      const bv = document.getElementById(`bv-${wi+1}`);
+      bv.textContent = formatBRL(weekSum);
+      const maxAbs = Math.max(...weekTotals.map(Math.abs), 1);
+      const heightPct = weekSum === 0 ? 2 : Math.max(4, (Math.abs(weekSum)/Math.max(maxAbs,0.01))*100);
+      bar.style.height = heightPct + '%';
+    }
+
+    document.getElementById('tot-mes').textContent = formatBRL(monthTotal);
+  }
+
+  document.addEventListener('input', (e) => {
+    if(e.target.classList.contains('cell-input') || e.target.id === 'meta-diaria'){
+      recalc();
+    }
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    if(confirm('Limpar todos os valores da planilha?')){
+      document.querySelectorAll('.cell-input').forEach(i => i.value = '');
+      recalc();
+    }
+  });
+
+  buildRows();
+  recalc();
+
+  // --- PWA: registro do service worker ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+
+  // --- PWA: botão de instalação (Android/Chrome) ---
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('btnInstall');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.style.display = 'inline-block';
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.style.display = 'none';
+  });
+</script>
+</body>
+</html>
